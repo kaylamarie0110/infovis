@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>InfoVis</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<!-- D3 -->
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="http://d3js.org/colorbrewer.v1.min.js"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+	
+	<style>
+		.axis path,
+		.axis line {
+		  fill: none;
+		  stroke: #000;
+		  shape-rendering: crispEdges;
+		}
+
+		.dot {
+		  stroke: #000;
+		}
+
+		.tooltip {
+		  position: absolute;
+		  width: 200px;
+		  height: 28px;
+		  pointer-events: none;
+		}
+	</style>
+	
+  </head>
+  
+  <body>
+    <nav class="navbar navbar-inverse">
+		<div class="container-fluid">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-main" aria-expanded="false">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand active" href="index.html">InfoVis</a>
+			</div>
+
+			<div class="navbar-collapse collapse" id="navbar-main" aria-expanded="false" style="height: 1px;">
+				<ul class="nav navbar-nav">
+					<li class="dropdown active">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Assignments <span class="caret"></span></a>
+						<ul class="dropdown-menu" role="menu">
+							<li><a href="week9_1_1.html">Week 9</a></li>
+							<li><a href="week10.html">Week 10</a></li>
+							<li><a href="week11.html">Week 11</a></li>
+							<li><a href="week12.html">Week 12</a></li>
+							<li><a href="week13.html">Week 13</a></li>
+						</ul>
+					</li>
+					<li><a href="project.html">Project</a></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	
+	<div id="content" class="container">
+		<h1>Week 9</h1>
+		<h3>Practice with Color Choices</h3>
+		<ul class="nav nav-tabs">
+			<li><a href="week9_1_1.html">Scenario 1</a></li>
+			<li class="active"><a href="week9_2_1.html">Scenario 2</a></li>
+			<li><a href="week9_3_1.html">Scenario 3</a></li>
+		</ul>
+		
+		<h4>Only QBs from schools in the Big Five conference group, marks colored by conference</h4>
+		
+		<ul class="nav nav-pills">
+			<li class="active"><a href="week9_2_1.html">No Restrictions</a></li>
+			<li><a href="week9_2_2.html">Why Color-Blind & Photocopy Safe Not Possible</a></li>
+		</ul>
+		
+		<br>
+		
+		<p><b>Explanation:</b>  Since there was no restrictions, we chose our color option at random from the ColorBrewer option.
+		We used a qualitative color scheme since our we are coloring the marks based on categorical data.</p>
+		
+	</div>
+	
+	<script>
+		var margin = {top: 20, right: 20, bottom: 30, left: 30},
+			width = 960 - margin.left - margin.right,
+			height = 500 - margin.top - margin.bottom;
+
+		// Setup x 
+		var xValue = function(d) { return d["Rushing TD"];}, // data -> value
+			xScale = d3.scale.linear().range([0, width]), // value -> display
+			xMap = function(d) { return xScale(xValue(d));}, // data -> display
+			xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+		// Setup y
+		var yValue = function(d) { return d["Passing TD"];}, // data -> value
+			yScale = d3.scale.linear().range([height, 0]), // value -> display
+			yMap = function(d) { return yScale(yValue(d));}, // data -> display
+			yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+		// Setup fill color
+		var cValue = function(d) { return d.Conf;},
+			color = d3.scale.ordinal()
+						.range(colorbrewer.Paired[5]);
+
+		// Add the graph canvas to the body of the webpage
+		var svg = d3.select("#content").append("svg")
+						.attr("width", width + margin.left + margin.right)
+						.attr("height", height + margin.top + margin.bottom)
+					.append("g")
+						.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		// Add the tooltip area to the webpage
+		var tooltip = d3.select("#content").append("div")
+							.attr("class", "tooltip")
+							.style("opacity", 0);
+
+		// load data
+		d3.csv("passing-stats-2014.csv", function(error, data) {
+
+			// Change string from CSV into number format
+			data.forEach(function(d) {
+				d["Passing TD"] = +d["Passing TD"];
+				d["Rushing TD"] = +d["Rushing TD"];
+			});
+
+			// Add buffer to data domain so dots won't overlap axis
+			xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+			yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+
+			// Create x-axis
+			svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height + ")")
+					.call(xAxis)
+				.append("text")
+					.attr("class", "label")
+					.attr("x", width)
+					.attr("y", -6)
+					.style("text-anchor", "end")
+					.text("Rushing TDs");
+
+			// Create y-axis
+			svg.append("g")
+					.attr("class", "y axis")
+					.call(yAxis)
+				.append("text")
+					.attr("class", "label")
+					.attr("transform", "rotate(-90)")
+					.attr("y", 6)
+					.attr("dy", ".71em")
+					.style("text-anchor", "end")
+					.text("Passing TDs");
+
+			// Draw dots
+			svg.selectAll(".dot")
+				.data(data)
+				.enter().append("circle")
+				.filter(function(d) { return d.ConfGrp == "Big Five" })
+				.attr("class", "dot")
+				.attr("r", 4.0)
+				.attr("cx", xMap)
+				.attr("cy", yMap)
+				.style("fill", function(d) { return color(cValue(d));}) 
+				.on("mouseover", function(d) {
+					tooltip.transition()
+							.duration(200)
+							.style("opacity", .9);
+					tooltip.html(d["Player"] + "<br/> " + d.School + "<br/> " + d.Conf + "<br/>(" + xValue(d) 	//Hover information
+									+ ", " + yValue(d) + ")")
+							.style("left", (d3.event.pageX + 10) + "px")
+							.style("top", (d3.event.pageY - 28) + "px");
+				})
+				.on("mouseout", function(d) {
+					tooltip.transition()
+							.duration(500)
+							.style("opacity", 0);
+				});
+
+			// Draw legend
+			var legend = svg.selectAll(".legend")
+							.data(color.domain())
+							.enter().append("g")
+								.attr("class", "legend")
+								.attr("transform", function(d, i) { return "translate(10," + (i+7) * 20 + ")"; });
+
+			// Draw legend colored rectangles
+			legend.append("rect")
+					.attr("x", width - 18)
+					.attr("width", 18)
+					.attr("height", 18)
+					.style("fill", color);
+
+			// Draw legend text
+			legend.append("text")
+					.attr("x", width - 24)
+					.attr("y", 9)
+					.attr("dy", ".35em")
+					.style("text-anchor", "end")
+					.text(function(d) { return d;})
+		});
+		
+	</script>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+	
+  </body>
+</html>
