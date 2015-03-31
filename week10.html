@@ -110,7 +110,7 @@
 						.data(data).enter()
 						.append('option')
 							.text(function (d) {return d; }),
-			optionsX = d3.select("#y-option-list")
+			optionsY = d3.select("#y-option-list")
 						.selectAll('option')
 						.data(data).enter()
 						.append('option')
@@ -133,8 +133,7 @@
 
 		// Setup fill color
 		var cValue = function(d) { return d.Conf;},
-			color = d3.scale.ordinal()
-						.range(colorbrewer.Paired[12]);
+			color = d3.scale.category20();
 
 		// Add the graph canvas to the body of the webpage
 		var svg = d3.select("#content").append("svg")
@@ -242,49 +241,62 @@
 			selectValueX = d3.select('#x-option-list').property('value');
 			selectValueY = d3.select('#y-option-list').property('value');
 			
-			xValue = function(d) { return d[selectValueX];}, // data -> value
-			xScale = d3.scale.linear().range([0, width]), // value -> display
-			xMap = function(d) { return xScale(xValue(d));}, // data -> display
-			xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+			var xValue = function(d) { return d[selectValueX];}, // data -> value
+		xScale = d3.scale.linear().range([0, width]), // value -> display
+		xMap = function(d) { return xScale(xValue(d));}, // data -> display
+		xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+		console.log(xMap);
+		console.log(xAxis);
+
+	// setup y
+		var yValue = function(d) { return d[selectValueY];}, // data -> value
+		yScale = d3.scale.linear().range([height, 0]), // value -> display
+		yMap = function(d) { return yScale(yValue(d));}, // data -> display
+		yAxis = d3.svg.axis().scale(yScale).orient("left");
+		
+		var cValue = function(d) { return d.Conf;},
+		color = d3.scale.category20();
+		
+		d3.csv("passing-stats-2014.csv", function(error, data) {
+
+	  // change string (from CSV) into number format
+	  data.forEach(function(d) {
+				d[selectValueY] = +d[selectValueY];
+				d[selectValueX] = +d[selectValueX];
+		});
+		
+	
+	  xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+	  yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+		
+	  svg.selectAll("circle")
+			 .data(data)
+			 .transition()
+			 .duration(1000)
+			 .delay(function(d,i){
+					return i/data.length * 500;
+			 })
+			 .attr("cx",xMap)
+			 .attr("cy",yMap);
+		
+		 // Update X Axis
+		svg.select(".x.axis")
+			.transition()
+			.duration(100)
+			.call(xAxis);
+		
+		svg.select(".x.axis text.label")
+			.text(selectValueX);
+
+		// Update Y Axis
+		svg.select(".y.axis")
+			.transition()
+			.duration(100)
+			.call(yAxis);
 			
-			yValue = function(d) { return d[selectValueY];}, // data -> value
-			yScale = d3.scale.linear().range([height, 0]), // value -> display
-			yMap = function(d) { return yScale(yValue(d));}, // data -> display
-			yAxis = d3.svg.axis().scale(yScale).orient("left");
-			
-			// load data
-			d3.csv("passing-stats-2014.csv", function(error, data) {
-				
-				// Change string from CSV into number format
-				data.forEach(function(d) {
-					d[selectValueY] = +d[selectValueY];
-					d[selectValueX] = +d[selectValueX];
-				});
-				
-				// Update circles
-				svg.selectAll("circle")
-					.data(data)	// Update with new data
-					.transition() // Transition from old to new
-					.duration(1000)
-					.delay(function(d, i) {
-						return i / data.length * 500;	// Dynamic delay
-					})
-					.attr("cx", xMap)
-					.attr("cy", yMap);
-				
-				// Update X Axis
-				svg.select(".x.axis")
-					.transition()
-					.duration(1000)
-					.call(xAxis);
-				
-				// Update Y Axis
-				svg.select(".y.axis")
-					.transition()
-					.duration(1000)
-					.call(yAxis);
-				
-			});
+		svg.select(".y.axis text.label")
+		   .text(selectValueY);	
+		});
 			
 		}
 
