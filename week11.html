@@ -106,121 +106,247 @@
 	
 	<script>
 	
-		// Generate a Bates distribution of 10 random variables.
-		var values = d3.range(1000).map(d3.random.bates(10));
+		// plot a histogram from mpg data in a .csv file
+function parser(d) {
+    //d.pMPG = +d.MPG;
+	d.pTD = +d["Passing TD"];
+    return d;
+}
 
-		// A formatter for counts.
-		var formatCount = d3.format(",.0f");
-		
-		var margin = {top: 10, right: 30, bottom: 30, left: 30},
+function mpghist(csvdata) {
+    var binsize = 5;
+    var minbin = 0;
+    var maxbin = 45;
+    var numbins = (maxbin - minbin) / binsize;
+
+    // whitespace on either side of the bars in units of MPG
+    var binmargin = .2; 
+    /*var margin = {top: 10, right: 30, bottom: 30, left: 30},
 		width = 500 - margin.left - margin.right,
-		height = 166.5 - margin.top - margin.bottom;
-		
-		var x = d3.scale.linear()
-			.domain([0, 1])
-			.range([0, width]);
+		height = 166.5 - margin.top - margin.bottom;*/
+	var margin = {top: 10, right: 30, bottom: 50, left: 60};
+    var width = 450 - margin.left - margin.right;
+    var height = 250 - margin.top - margin.bottom;
 
-		// Generate a histogram using twenty uniformly-spaced bins.
-		var data = d3.layout.histogram()
-			.bins(x.ticks(20))
-			(values);
+    // Set the limits of the x axis
+    var xmin = minbin
+    var xmax = maxbin
 
-		var y = d3.scale.linear()
-			.domain([0, d3.max(data, function(d) { return d.y; })])
-			.range([height, 0]);
+    histdata = new Array(numbins);
+    for (var i = 0; i < numbins; i++) {
+		histdata[i] = { numfill: 0 };
+	}
 
-		var xAxis = d3.svg.axis()
-			.scale(x)
-			.orient("bottom");
+	// Fill histdata with y-axis values and meta data
+    csvdata.forEach(function(d) {
+		var bin = Math.floor((d.pTD - minbin) / binsize);
+		if ((bin.toString() != "NaN") && (bin < histdata.length)) {
+			histdata[bin].numfill += 1;
+		}
+    });
 
-		var svg = d3.select("#histogram_passing").append("svg")
-			.attr("width", width + margin.left + margin.right)
-			.attr("height", height + margin.top + margin.bottom)
-		  .append("g")
-			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    // This scale is for determining the widths of the histogram bars
+    // Must start at 0 or else x(binsize a.k.a dx) will be negative
+    var x = d3.scale.linear()
+	  .domain([0, (xmax - xmin)])
+	  .range([0, width]);
 
-		var bar = svg.selectAll(".bar")
-			.data(data)
-		  .enter().append("g")
-			.attr("class", "bar")
-			.attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+    // Scale for the placement of the bars
+    var x2 = d3.scale.linear()
+	  .domain([xmin, xmax])
+	  .range([0, width]);
+	
+    var y = d3.scale.linear()
+	  .domain([0, d3.max(histdata, function(d) { 
+						return d.numfill; 
+						})])
+	  .range([height, 0]);
 
-		bar.append("rect")
-			.attr("x", 1)
-			.attr("width", x(data[0].dx) - 1)
-			.attr("height", function(d) { return height - y(d.y); });
+    var xAxis = d3.svg.axis()
+	  .scale(x2)
+	  .orient("bottom");
+    var yAxis = d3.svg.axis()
+	  .scale(y)
+	  .ticks(8)
+	  .orient("left");
 
-		bar.append("text")
-			.attr("dy", ".75em")
-			.attr("y", 6)
-			.attr("x", x(data[0].dx) / 2)
-			.attr("text-anchor", "middle")
-			.text(function(d) { return formatCount(d.y); });
+    // put the graph in the "histogram_passing" div
+    var svg = d3.select("#histogram_passing").append("svg")
+	  .attr("width", width + margin.left + margin.right)
+	  .attr("height", height + margin.top + margin.bottom)
+	  .append("g")
+	  .attr("transform", "translate(" + margin.left + "," + 
+						margin.top + ")");
 
-		svg.append("g")
-			.attr("class", "x axis")
-			.attr("transform", "translate(0," + height + ")")
-			.call(xAxis);
+    // set up the bars
+    var bar = svg.selectAll(".bar")
+	  .data(histdata)
+	  .enter().append("g")
+	  .attr("class", "bar")
+	  .attr("transform", function(d, i) { return "translate(" + 
+	       x2(i * binsize + minbin) + "," + y(d.numfill) + ")"; });
+
+    // add rectangles of correct size at correct location
+    bar.append("rect")
+	  .attr("x", x(binmargin))
+	  .attr("width", x(binsize - 2 * binmargin))
+	  .attr("height", function(d) { return height - y(d.numfill); });
+
+    // add the x axis and x-label
+    svg.append("g")
+	  .attr("class", "x axis")
+	  .attr("transform", "translate(0," + height + ")")
+	  .call(xAxis);
+    svg.append("text")
+	  .attr("class", "xlabel")
+	  .attr("text-anchor", "middle")
+	  .attr("x", width / 2)
+	  .attr("y", height + margin.bottom)
+	  .text("Passing TDs");
+
+    // add the y axis and y-label
+    svg.append("g")
+	  .attr("class", "y axis")
+	  .attr("transform", "translate(0,0)")
+	  .call(yAxis);
+    svg.append("text")
+	  .attr("class", "ylabel")
+	  .attr("y", 0 - margin.left) // x and y switched due to rotation
+	  .attr("x", 0 - (height / 2))
+	  .attr("dy", "1em")
+	  .attr("transform", "rotate(-90)")
+	  .style("text-anchor", "middle")
+	  .text("# of QBs");
+}
+
+// Read in .csv data and make graph
+d3.csv("passing-stats-2014.csv", parser,
+       function(error, csvdata) {
+	   mpghist(csvdata);
+}); 
 	
 	</script>
 	
 	<script>
 	
-		// Generate a Bates distribution of 10 random variables.
-		var values = d3.range(1000).map(d3.random.bates(10));
+		// plot a histogram from mpg data in a .csv file
+function parser(d) {
+    //d.pMPG = +d.MPG;
+	d.pTD = +d["Rushing TD"];
+    return d;
+}
 
-		// A formatter for counts.
-		var formatCount = d3.format(",.0f");
-		
-		var margin = {top: 10, right: 30, bottom: 30, left: 30},
+function rushing_hist(csvdata) {
+    var binsize = 2;
+    var minbin = 0;
+    var maxbin = 16;
+    var numbins = (maxbin - minbin) / binsize;
+
+    // whitespace on either side of the bars in units of MPG
+    var binmargin = .2; 
+    /*var margin = {top: 10, right: 30, bottom: 30, left: 30},
 		width = 500 - margin.left - margin.right,
-		height = 166.5 - margin.top - margin.bottom;
-		
-		var x = d3.scale.linear()
-			.domain([0, 1])
-			.range([0, width]);
+		height = 166.5 - margin.top - margin.bottom;*/
+	var margin = {top: 10, right: 30, bottom: 50, left: 60};
+    var width = 450 - margin.left - margin.right;
+    var height = 250 - margin.top - margin.bottom;
 
-		// Generate a histogram using twenty uniformly-spaced bins.
-		var data = d3.layout.histogram()
-			.bins(x.ticks(20))
-			(values);
+    // Set the limits of the x axis
+    var xmin = minbin
+    var xmax = maxbin
 
-		var y = d3.scale.linear()
-			.domain([0, d3.max(data, function(d) { return d.y; })])
-			.range([height, 0]);
+    histdata = new Array(numbins);
+    for (var i = 0; i < numbins; i++) {
+		histdata[i] = { numfill: 0 };
+	}
 
-		var xAxis = d3.svg.axis()
-			.scale(x)
-			.orient("bottom");
+	// Fill histdata with y-axis values and meta data
+    csvdata.forEach(function(d) {
+		var bin = Math.floor((d.pTD - minbin) / binsize);
+		if ((bin.toString() != "NaN") && (bin < histdata.length)) {
+			histdata[bin].numfill += 1;
+		}
+    });
 
-		var svg = d3.select("#histogram_rushing").append("svg")
-			.attr("width", width + margin.left + margin.right)
-			.attr("height", height + margin.top + margin.bottom)
-		  .append("g")
-			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    // This scale is for determining the widths of the histogram bars
+    // Must start at 0 or else x(binsize a.k.a dx) will be negative
+    var x = d3.scale.linear()
+	  .domain([0, (xmax - xmin)])
+	  .range([0, width]);
 
-		var bar = svg.selectAll(".bar")
-			.data(data)
-		  .enter().append("g")
-			.attr("class", "bar")
-			.attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+    // Scale for the placement of the bars
+    var x2 = d3.scale.linear()
+	  .domain([xmin, xmax])
+	  .range([0, width]);
+	
+    var y = d3.scale.linear()
+	  .domain([0, d3.max(histdata, function(d) { 
+						return d.numfill; 
+						})])
+	  .range([height, 0]);
 
-		bar.append("rect")
-			.attr("x", 1)
-			.attr("width", x(data[0].dx) - 1)
-			.attr("height", function(d) { return height - y(d.y); });
+    var xAxis = d3.svg.axis()
+	  .scale(x2)
+	  .orient("bottom");
+    var yAxis = d3.svg.axis()
+	  .scale(y)
+	  .ticks(8)
+	  .orient("left");
 
-		bar.append("text")
-			.attr("dy", ".75em")
-			.attr("y", 6)
-			.attr("x", x(data[0].dx) / 2)
-			.attr("text-anchor", "middle")
-			.text(function(d) { return formatCount(d.y); });
+    // put the graph in the "histogram_passing" div
+    var svg = d3.select("#histogram_rushing").append("svg")
+	  .attr("width", width + margin.left + margin.right)
+	  .attr("height", height + margin.top + margin.bottom)
+	  .append("g")
+	  .attr("transform", "translate(" + margin.left + "," + 
+						margin.top + ")");
 
-		svg.append("g")
-			.attr("class", "x axis")
-			.attr("transform", "translate(0," + height + ")")
-			.call(xAxis);
+    // set up the bars
+    var bar = svg.selectAll(".bar")
+	  .data(histdata)
+	  .enter().append("g")
+	  .attr("class", "bar")
+	  .attr("transform", function(d, i) { return "translate(" + 
+	       x2(i * binsize + minbin) + "," + y(d.numfill) + ")"; });
+
+    // add rectangles of correct size at correct location
+    bar.append("rect")
+	  .attr("x", x(binmargin))
+	  .attr("width", x(binsize - 2 * binmargin))
+	  .attr("height", function(d) { return height - y(d.numfill); });
+
+    // add the x axis and x-label
+    svg.append("g")
+	  .attr("class", "x axis")
+	  .attr("transform", "translate(0," + height + ")")
+	  .call(xAxis);
+    svg.append("text")
+	  .attr("class", "xlabel")
+	  .attr("text-anchor", "middle")
+	  .attr("x", width / 2)
+	  .attr("y", height + margin.bottom)
+	  .text("Rushing TDs");
+
+    // add the y axis and y-label
+    svg.append("g")
+	  .attr("class", "y axis")
+	  .attr("transform", "translate(0,0)")
+	  .call(yAxis);
+    svg.append("text")
+	  .attr("class", "ylabel")
+	  .attr("y", 0 - margin.left) // x and y switched due to rotation
+	  .attr("x", 0 - (height / 2))
+	  .attr("dy", "1em")
+	  .attr("transform", "rotate(-90)")
+	  .style("text-anchor", "middle")
+	  .text("# of QBs");
+}
+
+// Read in .csv data and make graph
+d3.csv("passing-stats-2014.csv", parser,
+       function(error, csvdata) {
+	   rushing_hist(csvdata);
+});
 	
 	</script>
 	
