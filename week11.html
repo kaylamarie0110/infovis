@@ -9,6 +9,9 @@
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+	<!-- D3 -->
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="http://d3js.org/colorbrewer.v1.min.js"></script>
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -16,6 +19,38 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+	
+	<style>
+
+		.bar rect {
+		  fill: steelblue;
+		  shape-rendering: crispEdges;
+		}
+
+		.bar text {
+		  fill: #fff;
+		  font: 10px sans-serif;
+		}
+		
+		.axis path,
+		.axis line {
+		  fill: none;
+		  stroke: #000;
+		  shape-rendering: crispEdges;
+		}
+
+		.dot {
+		  stroke: #000;
+		}
+
+		.tooltip {
+		  position: absolute;
+		  width: 200px;
+		  height: 28px;
+		  pointer-events: none;
+		}
+	</style>
+	
   </head>
   <body>
     <nav class="navbar navbar-inverse">
@@ -46,8 +81,268 @@
 	</nav>
 	
 	<div class="container">
-		<h1>Coming Soon!</h1>
+		<h1>Week 11</h1>
+		<h3>Interactive Vis with Multiple Juxtaposed Views that Include Linked Highlighting</h3>
+		
+		<div class="row">
+			
+			<div id="scatterplot" class="col-md-7">
+			
+			</div>
+			
+			<div class="col-md-5">
+				<div id="histogram_passing" class="row">
+					<h4>Passing TD Histogram</h4>
+				</div>
+				
+				<div id="histogram_rushing" class="row">
+					<h4>Rushing TD Histogram</h4>
+				</div>
+				
+			</div>
+			
+		</div>
 	</div>
+	
+	<script>
+	
+		// Generate a Bates distribution of 10 random variables.
+		var values = d3.range(1000).map(d3.random.bates(10));
+
+		// A formatter for counts.
+		var formatCount = d3.format(",.0f");
+		
+		var margin = {top: 10, right: 30, bottom: 30, left: 30},
+		width = 500 - margin.left - margin.right,
+		height = 166.5 - margin.top - margin.bottom;
+		
+		var x = d3.scale.linear()
+			.domain([0, 1])
+			.range([0, width]);
+
+		// Generate a histogram using twenty uniformly-spaced bins.
+		var data = d3.layout.histogram()
+			.bins(x.ticks(20))
+			(values);
+
+		var y = d3.scale.linear()
+			.domain([0, d3.max(data, function(d) { return d.y; })])
+			.range([height, 0]);
+
+		var xAxis = d3.svg.axis()
+			.scale(x)
+			.orient("bottom");
+
+		var svg = d3.select("#histogram_passing").append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+		  .append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		var bar = svg.selectAll(".bar")
+			.data(data)
+		  .enter().append("g")
+			.attr("class", "bar")
+			.attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+
+		bar.append("rect")
+			.attr("x", 1)
+			.attr("width", x(data[0].dx) - 1)
+			.attr("height", function(d) { return height - y(d.y); });
+
+		bar.append("text")
+			.attr("dy", ".75em")
+			.attr("y", 6)
+			.attr("x", x(data[0].dx) / 2)
+			.attr("text-anchor", "middle")
+			.text(function(d) { return formatCount(d.y); });
+
+		svg.append("g")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + height + ")")
+			.call(xAxis);
+	
+	</script>
+	
+	<script>
+	
+		// Generate a Bates distribution of 10 random variables.
+		var values = d3.range(1000).map(d3.random.bates(10));
+
+		// A formatter for counts.
+		var formatCount = d3.format(",.0f");
+		
+		var margin = {top: 10, right: 30, bottom: 30, left: 30},
+		width = 500 - margin.left - margin.right,
+		height = 166.5 - margin.top - margin.bottom;
+		
+		var x = d3.scale.linear()
+			.domain([0, 1])
+			.range([0, width]);
+
+		// Generate a histogram using twenty uniformly-spaced bins.
+		var data = d3.layout.histogram()
+			.bins(x.ticks(20))
+			(values);
+
+		var y = d3.scale.linear()
+			.domain([0, d3.max(data, function(d) { return d.y; })])
+			.range([height, 0]);
+
+		var xAxis = d3.svg.axis()
+			.scale(x)
+			.orient("bottom");
+
+		var svg = d3.select("#histogram_rushing").append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+		  .append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		var bar = svg.selectAll(".bar")
+			.data(data)
+		  .enter().append("g")
+			.attr("class", "bar")
+			.attr("transform", function(d) { return "translate(" + x(d.x) + "," + y(d.y) + ")"; });
+
+		bar.append("rect")
+			.attr("x", 1)
+			.attr("width", x(data[0].dx) - 1)
+			.attr("height", function(d) { return height - y(d.y); });
+
+		bar.append("text")
+			.attr("dy", ".75em")
+			.attr("y", 6)
+			.attr("x", x(data[0].dx) / 2)
+			.attr("text-anchor", "middle")
+			.text(function(d) { return formatCount(d.y); });
+
+		svg.append("g")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + height + ")")
+			.call(xAxis);
+	
+	</script>
+	
+	<script>
+		var margin = {top: 20, right: 20, bottom: 30, left: 30},
+			width = 640 - margin.left - margin.right,
+			height = 420 - margin.top - margin.bottom;
+
+		// Setup x 
+		var xValue = function(d) { return d["Rushing TD"];}, // data -> value
+			xScale = d3.scale.linear().range([0, width]), // value -> display
+			xMap = function(d) { return xScale(xValue(d));}, // data -> display
+			xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+		// Setup y
+		var yValue = function(d) { return d["Passing TD"];}, // data -> value
+			yScale = d3.scale.linear().range([height, 0]), // value -> display
+			yMap = function(d) { return yScale(yValue(d));}, // data -> display
+			yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+		// Setup fill color
+		var cValue = function(d) { return d.ConfGrp;},
+			color = d3.scale.ordinal()
+						.range(colorbrewer.Dark2[3]);
+
+		// Add the graph canvas to the body of the webpage
+		var svg = d3.select("#scatterplot").append("svg")
+						.attr("width", width + margin.left + margin.right)
+						.attr("height", height + margin.top + margin.bottom)
+					.append("g")
+						.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+		// Add the tooltip area to the webpage
+		var tooltip = d3.select("#scatterplot").append("div")
+							.attr("class", "tooltip")
+							.style("opacity", 0);
+
+		// load data
+		d3.csv("passing-stats-2014.csv", function(error, data) {
+
+			// Change string from CSV into number format
+			data.forEach(function(d) {
+				d["Passing TD"] = +d["Passing TD"];
+				d["Rushing TD"] = +d["Rushing TD"];
+			});
+
+			// Add buffer to data domain so dots won't overlap axis
+			xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+			yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+
+			// Create x-axis
+			svg.append("g")
+					.attr("class", "x axis")
+					.attr("transform", "translate(0," + height + ")")
+					.call(xAxis)
+				.append("text")
+					.attr("class", "label")
+					.attr("x", width)
+					.attr("y", -6)
+					.style("text-anchor", "end")
+					.text("Rushing TDs");
+
+			// Create y-axis
+			svg.append("g")
+					.attr("class", "y axis")
+					.call(yAxis)
+				.append("text")
+					.attr("class", "label")
+					.attr("transform", "rotate(-90)")
+					.attr("y", 6)
+					.attr("dy", ".71em")
+					.style("text-anchor", "end")
+					.text("Passing TDs");
+
+			// Draw dots
+			svg.selectAll(".dot")
+				.data(data)
+				.enter().append("circle")
+				.attr("class", "dot")
+				.attr("r", 4.0)
+				.attr("cx", xMap)
+				.attr("cy", yMap)
+				.style("fill", function(d) { return color(cValue(d));}) 
+				.on("mouseover", function(d) {
+					tooltip.transition()
+							.duration(200)
+							.style("opacity", .9);
+					tooltip.html(d["Player"] + "<br/> " + d.School + "<br/> " + d.Conf + "<br/>(" + xValue(d) 	//Hover information
+									+ ", " + yValue(d) + ")");
+							//.style("left", (d3.event.pageX + 5) + "px")
+							//.style("top", (d3.event.pageY - 14) + "px");
+				})
+				.on("mouseout", function(d) {
+					tooltip.transition()
+							.duration(500)
+							.style("opacity", 0);
+				});
+
+			// Draw legend
+			var legend = svg.selectAll(".legend")
+							.data(color.domain())
+							.enter().append("g")
+								.attr("class", "legend")
+								.attr("transform", function(d, i) { return "translate(10," + (i+7) * 20 + ")"; });
+
+			// Draw legend colored rectangles
+			legend.append("rect")
+					.attr("x", width - 18)
+					.attr("width", 18)
+					.attr("height", 18)
+					.style("fill", color);
+
+			// Draw legend text
+			legend.append("text")
+					.attr("x", width - 24)
+					.attr("y", 9)
+					.attr("dy", ".35em")
+					.style("text-anchor", "end")
+					.text(function(d) { return d;})
+		});
+		
+	</script>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
