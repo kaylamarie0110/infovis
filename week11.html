@@ -9,9 +9,9 @@
 
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
-	<!-- D3 -->
-	<script src="http://d3js.org/d3.v3.min.js"></script>
-	<script src="http://d3js.org/colorbrewer.v1.min.js"></script>
+  <!-- D3 -->
+  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <script src="http://d3js.org/colorbrewer.v1.min.js"></script>
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -19,97 +19,102 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-	
-	<style>
+  
+  <style>
 
-		.bar rect {
-		  fill: steelblue;
-		  shape-rendering: crispEdges;
-		}
+    .bar rect {
+      fill: steelblue;
+      shape-rendering: crispEdges;
+    }
 
-		.bar text {
-		  fill: #fff;
-		  font: 10px sans-serif;
-		}
-		
-		.axis path,
-		.axis line {
-		  fill: none;
-		  stroke: #000;
-		  shape-rendering: crispEdges;
-		}
+    .hovered rect {
+      fill: red!important;
+      shape-rendering: crispEdges;
+    }
 
-		.dot {
-		  stroke: #000;
-		}
+    .bar text {
+      fill: #fff;
+      font: 10px sans-serif;
+    }
+    
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
 
-		.tooltip {
-		  position: absolute;
-		  width: 200px;
-		  height: 28px;
-		  pointer-events: none;
-		}
-	</style>
-	
+    .dot {
+      stroke: #000;
+    }
+
+    .tooltip {
+      position: absolute;
+      width: 200px;
+      height: 28px;
+      pointer-events: none;
+    }
+  </style>
+  
   </head>
   <body>
     <nav class="navbar navbar-inverse">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-main" aria-expanded="false">
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand active" href="index.html">InfoVis</a>
-			</div>
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-main" aria-expanded="false">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand active" href="index.html">InfoVis</a>
+      </div>
 
-			<div class="navbar-collapse collapse" id="navbar-main" aria-expanded="false" style="height: 1px;">
-				<ul class="nav navbar-nav">
-					<li class="dropdown active">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Assignments <span class="caret"></span></a>
-						<ul class="dropdown-menu" role="menu">
-							<li><a href="week9_1_1.html">Week 9</a></li>
-							<li><a href="week10.html">Week 10</a></li>
-							<li><a href="week11.html">Week 11</a></li>
-						</ul>
-					</li>
-					<li><a href="project.html">Project</a></li>
-				</ul>
-			</div>
-		</div>
-	</nav>
-	
-	<div class="container">
-		<h1>Week 11</h1>
-		<h3>Interactive Vis with Multiple Juxtaposed Views that Include Linked Highlighting</h3>
-		
-		<div class="row">
-			
-			<div id="scatterplot" class="col-md-7">
-			
-			</div>
-			
-			<div class="col-md-5">
-				<div id="histogram_passing" class="row">
-					<h4>Passing TD Histogram</h4>
-				</div>
-				
-				<div id="histogram_rushing" class="row">
-					<h4>Rushing TD Histogram</h4>
-				</div>
-				
-			</div>
-			
-		</div>
-	</div>
-	
-	<script>
-	
-		// plot a histogram from mpg data in a .csv file
+      <div class="navbar-collapse collapse" id="navbar-main" aria-expanded="false" style="height: 1px;">
+        <ul class="nav navbar-nav">
+          <li class="dropdown active">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Assignments <span class="caret"></span></a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="week9_1_1.html">Week 9</a></li>
+              <li><a href="week10.html">Week 10</a></li>
+              <li><a href="week11.html">Week 11</a></li>
+            </ul>
+          </li>
+          <li><a href="project.html">Project</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  
+  <div class="container">
+    <h1>Week 11</h1>
+    <h3>Interactive Vis with Multiple Juxtaposed Views that Include Linked Highlighting</h3>
+    
+    <div class="row">
+      
+      <div id="scatterplot" class="col-md-7">
+      
+      </div>
+      
+      <div class="col-md-5">
+        <div id="histogram_passing" class="row">
+          <h4>Passing TD Histogram</h4>
+        </div>
+        
+        <div id="histogram_rushing" class="row">
+          <h4>Rushing TD Histogram</h4>
+        </div>
+        
+      </div>
+      
+    </div>
+  </div>
+  
+  <script>
+  
+    // plot a histogram from mpg data in a .csv file
 function parser(d) {
     //d.pMPG = +d.MPG;
-	d.pTD = +d["Passing TD"];
+  d.pTD = +d["Passing TD"];
     return d;
 }
 
@@ -122,9 +127,9 @@ function mpghist(csvdata) {
     // whitespace on either side of the bars in units of MPG
     var binmargin = .2; 
     /*var margin = {top: 10, right: 30, bottom: 30, left: 30},
-		width = 500 - margin.left - margin.right,
-		height = 166.5 - margin.top - margin.bottom;*/
-	var margin = {top: 10, right: 30, bottom: 50, left: 60};
+    width = 500 - margin.left - margin.right,
+    height = 166.5 - margin.top - margin.bottom;*/
+  var margin = {top: 10, right: 30, bottom: 50, left: 60};
     var width = 450 - margin.left - margin.right;
     var height = 250 - margin.top - margin.bottom;
 
@@ -134,105 +139,105 @@ function mpghist(csvdata) {
 
     histdata = new Array(numbins);
     for (var i = 0; i < numbins; i++) {
-		histdata[i] = { numfill: 0 };
-	}
+    histdata[i] = { numfill: 0 };
+  }
 
-	// Fill histdata with y-axis values and meta data
+  // Fill histdata with y-axis values and meta data
     csvdata.forEach(function(d) {
-		var bin = Math.floor((d.pTD - minbin) / binsize);
-		if ((bin.toString() != "NaN") && (bin < histdata.length)) {
-			histdata[bin].numfill += 1;
-		}
+    var bin = Math.floor((d.pTD - minbin) / binsize);
+    if ((bin.toString() != "NaN") && (bin < histdata.length)) {
+      histdata[bin].numfill += 1;
+    }
     });
 
     // This scale is for determining the widths of the histogram bars
     // Must start at 0 or else x(binsize a.k.a dx) will be negative
     var x = d3.scale.linear()
-	  .domain([0, (xmax - xmin)])
-	  .range([0, width]);
+    .domain([0, (xmax - xmin)])
+    .range([0, width]);
 
     // Scale for the placement of the bars
     var x2 = d3.scale.linear()
-	  .domain([xmin, xmax])
-	  .range([0, width]);
-	
+    .domain([xmin, xmax])
+    .range([0, width]);
+  
     var y = d3.scale.linear()
-	  .domain([0, d3.max(histdata, function(d) { 
-						return d.numfill; 
-						})])
-	  .range([height, 0]);
+    .domain([0, d3.max(histdata, function(d) { 
+            return d.numfill; 
+            })])
+    .range([height, 0]);
 
     var xAxis = d3.svg.axis()
-	  .scale(x2)
-	  .orient("bottom");
+    .scale(x2)
+    .orient("bottom");
     var yAxis = d3.svg.axis()
-	  .scale(y)
-	  .ticks(8)
-	  .orient("left");
+    .scale(y)
+    .ticks(8)
+    .orient("left");
 
     // put the graph in the "histogram_passing" div
     var svg = d3.select("#histogram_passing").append("svg")
-	  .attr("width", width + margin.left + margin.right)
-	  .attr("height", height + margin.top + margin.bottom)
-	  .append("g")
-	  .attr("transform", "translate(" + margin.left + "," + 
-						margin.top + ")");
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + 
+            margin.top + ")");
 
     // set up the bars
     var bar = svg.selectAll(".bar")
-	  .data(histdata)
-	  .enter().append("g")
-	  .attr("class", "bar")
-	  .attr("transform", function(d, i) { return "translate(" + 
-	       x2(i * binsize + minbin) + "," + y(d.numfill) + ")"; });
+    .data(histdata)
+    .enter().append("g")
+    .attr("class", "bar")
+    .attr("transform", function(d, i) { return "translate(" + 
+         x2(i * binsize + minbin) + "," + y(d.numfill) + ")"; });
 
     // add rectangles of correct size at correct location
     bar.append("rect")
-	  .attr("x", x(binmargin))
-	  .attr("width", x(binsize - 2 * binmargin))
-	  .attr("height", function(d) { return height - y(d.numfill); });
+    .attr("x", x(binmargin))
+    .attr("width", x(binsize - 2 * binmargin))
+    .attr("height", function(d) { return height - y(d.numfill); });
 
     // add the x axis and x-label
     svg.append("g")
-	  .attr("class", "x axis")
-	  .attr("transform", "translate(0," + height + ")")
-	  .call(xAxis);
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
     svg.append("text")
-	  .attr("class", "xlabel")
-	  .attr("text-anchor", "middle")
-	  .attr("x", width / 2)
-	  .attr("y", height + margin.bottom)
-	  .text("Passing TDs");
+    .attr("class", "xlabel")
+    .attr("text-anchor", "middle")
+    .attr("x", width / 2)
+    .attr("y", height + margin.bottom)
+    .text("Passing TDs");
 
     // add the y axis and y-label
     svg.append("g")
-	  .attr("class", "y axis")
-	  .attr("transform", "translate(0,0)")
-	  .call(yAxis);
+    .attr("class", "y axis")
+    .attr("transform", "translate(0,0)")
+    .call(yAxis);
     svg.append("text")
-	  .attr("class", "ylabel")
-	  .attr("y", 0 - margin.left) // x and y switched due to rotation
-	  .attr("x", 0 - (height / 2))
-	  .attr("dy", "1em")
-	  .attr("transform", "rotate(-90)")
-	  .style("text-anchor", "middle")
-	  .text("# of QBs");
+    .attr("class", "ylabel")
+    .attr("y", 0 - margin.left) // x and y switched due to rotation
+    .attr("x", 0 - (height / 2))
+    .attr("dy", "1em")
+    .attr("transform", "rotate(-90)")
+    .style("text-anchor", "middle")
+    .text("# of QBs");
 }
 
 // Read in .csv data and make graph
 d3.csv("passing-stats-2014.csv", parser,
        function(error, csvdata) {
-	   mpghist(csvdata);
+     mpghist(csvdata);
 }); 
-	
-	</script>
-	
-	<script>
-	
-		// plot a histogram from mpg data in a .csv file
+  
+  </script>
+  
+  <script>
+  
+    // plot a histogram from mpg data in a .csv file
 function parser(d) {
     //d.pMPG = +d.MPG;
-	d.pTD = +d["Rushing TD"];
+  d.pTD = +d["Rushing TD"];
     return d;
 }
 
@@ -245,9 +250,9 @@ function rushing_hist(csvdata) {
     // whitespace on either side of the bars in units of MPG
     var binmargin = .2; 
     /*var margin = {top: 10, right: 30, bottom: 30, left: 30},
-		width = 500 - margin.left - margin.right,
-		height = 166.5 - margin.top - margin.bottom;*/
-	var margin = {top: 10, right: 30, bottom: 50, left: 60};
+    width = 500 - margin.left - margin.right,
+    height = 166.5 - margin.top - margin.bottom;*/
+  var margin = {top: 10, right: 30, bottom: 50, left: 60};
     var width = 450 - margin.left - margin.right;
     var height = 250 - margin.top - margin.bottom;
 
@@ -257,218 +262,222 @@ function rushing_hist(csvdata) {
 
     histdata = new Array(numbins);
     for (var i = 0; i < numbins; i++) {
-		histdata[i] = { numfill: 0 };
-	}
+    histdata[i] = { numfill: 0 };
+  }
 
-	// Fill histdata with y-axis values and meta data
+  // Fill histdata with y-axis values and meta data
     csvdata.forEach(function(d) {
-		var bin = Math.floor((d.pTD - minbin) / binsize);
-		if ((bin.toString() != "NaN") && (bin < histdata.length)) {
-			histdata[bin].numfill += 1;
-		}
+    var bin = Math.floor((d.pTD - minbin) / binsize);
+    if ((bin.toString() != "NaN") && (bin < histdata.length)) {
+      histdata[bin].numfill += 1;
+    }
     });
 
     // This scale is for determining the widths of the histogram bars
     // Must start at 0 or else x(binsize a.k.a dx) will be negative
     var x = d3.scale.linear()
-	  .domain([0, (xmax - xmin)])
-	  .range([0, width]);
+    .domain([0, (xmax - xmin)])
+    .range([0, width]);
 
     // Scale for the placement of the bars
     var x2 = d3.scale.linear()
-	  .domain([xmin, xmax])
-	  .range([0, width]);
-	
+    .domain([xmin, xmax])
+    .range([0, width]);
+  
     var y = d3.scale.linear()
-	  .domain([0, d3.max(histdata, function(d) { 
-						return d.numfill; 
-						})])
-	  .range([height, 0]);
+    .domain([0, d3.max(histdata, function(d) { 
+            return d.numfill; 
+            })])
+    .range([height, 0]);
 
     var xAxis = d3.svg.axis()
-	  .scale(x2)
-	  .orient("bottom");
+    .scale(x2)
+    .orient("bottom");
     var yAxis = d3.svg.axis()
-	  .scale(y)
-	  .ticks(8)
-	  .orient("left");
+    .scale(y)
+    .ticks(8)
+    .orient("left");
 
     // put the graph in the "histogram_passing" div
     var svg = d3.select("#histogram_rushing").append("svg")
-	  .attr("width", width + margin.left + margin.right)
-	  .attr("height", height + margin.top + margin.bottom)
-	  .append("g")
-	  .attr("transform", "translate(" + margin.left + "," + 
-						margin.top + ")");
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + 
+            margin.top + ")");
 
     // set up the bars
     var bar = svg.selectAll(".bar")
-	  .data(histdata)
-	  .enter().append("g")
-	  .attr("class", "bar")
-	  .attr("transform", function(d, i) { return "translate(" + 
-	       x2(i * binsize + minbin) + "," + y(d.numfill) + ")"; });
+    .data(histdata)
+    .enter().append("g")
+    .attr("class", "bar")
+    .attr("transform", function(d, i) { return "translate(" + 
+         x2(i * binsize + minbin) + "," + y(d.numfill) + ")"; });
 
     // add rectangles of correct size at correct location
     bar.append("rect")
-	  .attr("x", x(binmargin))
-	  .attr("width", x(binsize - 2 * binmargin))
-	  .attr("height", function(d) { return height - y(d.numfill); });
+    .attr("x", x(binmargin))
+    .attr("width", x(binsize - 2 * binmargin))
+    .attr("height", function(d) { return height - y(d.numfill); });
 
     // add the x axis and x-label
     svg.append("g")
-	  .attr("class", "x axis")
-	  .attr("transform", "translate(0," + height + ")")
-	  .call(xAxis);
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
     svg.append("text")
-	  .attr("class", "xlabel")
-	  .attr("text-anchor", "middle")
-	  .attr("x", width / 2)
-	  .attr("y", height + margin.bottom)
-	  .text("Rushing TDs");
+    .attr("class", "xlabel")
+    .attr("text-anchor", "middle")
+    .attr("x", width / 2)
+    .attr("y", height + margin.bottom)
+    .text("Rushing TDs");
 
     // add the y axis and y-label
     svg.append("g")
-	  .attr("class", "y axis")
-	  .attr("transform", "translate(0,0)")
-	  .call(yAxis);
+    .attr("class", "y axis")
+    .attr("transform", "translate(0,0)")
+    .call(yAxis);
     svg.append("text")
-	  .attr("class", "ylabel")
-	  .attr("y", 0 - margin.left) // x and y switched due to rotation
-	  .attr("x", 0 - (height / 2))
-	  .attr("dy", "1em")
-	  .attr("transform", "rotate(-90)")
-	  .style("text-anchor", "middle")
-	  .text("# of QBs");
+    .attr("class", "ylabel")
+    .attr("y", 0 - margin.left) // x and y switched due to rotation
+    .attr("x", 0 - (height / 2))
+    .attr("dy", "1em")
+    .attr("transform", "rotate(-90)")
+    .style("text-anchor", "middle")
+    .text("# of QBs");
 }
 
 // Read in .csv data and make graph
 d3.csv("passing-stats-2014.csv", parser,
        function(error, csvdata) {
-	   rushing_hist(csvdata);
+     rushing_hist(csvdata);
 });
-	
-	</script>
-	
-	<script>
-		var margin = {top: 20, right: 20, bottom: 30, left: 30},
-			width = 640 - margin.left - margin.right,
-			height = 420 - margin.top - margin.bottom;
+  
+  </script>
+  
+  <script>
+    var margin = {top: 20, right: 20, bottom: 30, left: 30},
+      width = 640 - margin.left - margin.right,
+      height = 420 - margin.top - margin.bottom;
 
-		// Setup x 
-		var xValue = function(d) { return d["Rushing TD"];}, // data -> value
-			xScale = d3.scale.linear().range([0, width]), // value -> display
-			xMap = function(d) { return xScale(xValue(d));}, // data -> display
-			xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+    // Setup x 
+    var xValue = function(d) { return d["Rushing TD"];}, // data -> value
+      xScale = d3.scale.linear().range([0, width]), // value -> display
+      xMap = function(d) { return xScale(xValue(d));}, // data -> display
+      xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
-		// Setup y
-		var yValue = function(d) { return d["Passing TD"];}, // data -> value
-			yScale = d3.scale.linear().range([height, 0]), // value -> display
-			yMap = function(d) { return yScale(yValue(d));}, // data -> display
-			yAxis = d3.svg.axis().scale(yScale).orient("left");
+    // Setup y
+    var yValue = function(d) { return d["Passing TD"];}, // data -> value
+      yScale = d3.scale.linear().range([height, 0]), // value -> display
+      yMap = function(d) { return yScale(yValue(d));}, // data -> display
+      yAxis = d3.svg.axis().scale(yScale).orient("left");
 
-		// Setup fill color
-		var cValue = function(d) { return d.ConfGrp;},
-			color = d3.scale.ordinal()
-						.range(colorbrewer.Dark2[3]);
+    // Setup fill color
+    var cValue = function(d) { return d.ConfGrp;},
+      color = d3.scale.ordinal()
+            .range(colorbrewer.Dark2[3]);
 
-		// Add the graph canvas to the body of the webpage
-		var svg = d3.select("#scatterplot").append("svg")
-						.attr("width", width + margin.left + margin.right)
-						.attr("height", height + margin.top + margin.bottom)
-					.append("g")
-						.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    // Add the graph canvas to the body of the webpage
+    var svg = d3.select("#scatterplot").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-		// Add the tooltip area to the webpage
-		var tooltip = d3.select("#scatterplot").append("div")
-							.attr("class", "tooltip")
-							.style("opacity", 0);
+    // Add the tooltip area to the webpage
+    var tooltip = d3.select("#scatterplot").append("div")
+              .attr("class", "tooltip")
+              .style("opacity", 0);
 
-		// load data
-		d3.csv("passing-stats-2014.csv", function(error, data) {
+    // load data
+    d3.csv("passing-stats-2014.csv", function(error, data) {
 
-			// Change string from CSV into number format
-			data.forEach(function(d) {
-				d["Passing TD"] = +d["Passing TD"];
-				d["Rushing TD"] = +d["Rushing TD"];
-			});
+      // Change string from CSV into number format
+      data.forEach(function(d) {
+        d["Passing TD"] = +d["Passing TD"];
+        d["Rushing TD"] = +d["Rushing TD"];
+      });
 
-			// Add buffer to data domain so dots won't overlap axis
-			xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
-			yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+      // Add buffer to data domain so dots won't overlap axis
+      xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+      yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
 
-			// Create x-axis
-			svg.append("g")
-					.attr("class", "x axis")
-					.attr("transform", "translate(0," + height + ")")
-					.call(xAxis)
-				.append("text")
-					.attr("class", "label")
-					.attr("x", width)
-					.attr("y", -6)
-					.style("text-anchor", "end")
-					.text("Rushing TDs");
+      // Create x-axis
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+        .append("text")
+          .attr("class", "label")
+          .attr("x", width)
+          .attr("y", -6)
+          .style("text-anchor", "end")
+          .text("Rushing TDs");
 
-			// Create y-axis
-			svg.append("g")
-					.attr("class", "y axis")
-					.call(yAxis)
-				.append("text")
-					.attr("class", "label")
-					.attr("transform", "rotate(-90)")
-					.attr("y", 6)
-					.attr("dy", ".71em")
-					.style("text-anchor", "end")
-					.text("Passing TDs");
+      // Create y-axis
+      svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("class", "label")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("Passing TDs");
 
-			// Draw dots
-			svg.selectAll(".dot")
-				.data(data)
-				.enter().append("circle")
-				.attr("class", "dot")
-				.attr("r", 4.0)
-				.attr("cx", xMap)
-				.attr("cy", yMap)
-				.style("fill", function(d) { return color(cValue(d));}) 
-				.on("mouseover", function(d) {
-					tooltip.transition()
-							.duration(200)
-							.style("opacity", .9);
-					tooltip.html(d["Player"] + "<br/> " + d.School + "<br/> " + d.Conf + "<br/>(" + xValue(d) 	//Hover information
-									+ ", " + yValue(d) + ")");
-							//.style("left", (d3.event.pageX + 5) + "px")
-							//.style("top", (d3.event.pageY - 14) + "px");
-				})
-				.on("mouseout", function(d) {
-					tooltip.transition()
-							.duration(500)
-							.style("opacity", 0);
-				});
+      // Draw dots
+      svg.selectAll(".dot")
+        .data(data)
+        .enter().append("circle")
+        .attr("class", "dot")
+        .attr("r", 4.0)
+        .attr("cx", xMap)
+        .attr("cy", yMap)
+        .style("fill", function(d) { return color(cValue(d));}) 
+        .on("mouseover", function(d) {
+          tooltip.transition()
+              .duration(200)
+              .style("opacity", .9);
+          tooltip.html(d["Player"] + "<br/> " + d.School + "<br/> " + d.Conf + "<br/>(" + xValue(d)   //Hover information
+                  + ", " + yValue(d) + ")");
+          xbar = parseInt(xValue(d)/2) + 1;
+          ybar = parseInt(yValue(d)/5) + 1;
+          d3.selectAll("#histogram_rushing .bar:nth-child("+xbar+")").attr("class", "bar hovered");
+          d3.selectAll("#histogram_passing .bar:nth-child("+ybar+")").attr("class", "bar hovered");
+        })
+        .on("mouseout", function(d) {
+          d3.selectAll("#histogram_rushing .bar").attr("class", "bar");
+          d3.selectAll("#histogram_passing .bar").attr("class", "bar");
+          tooltip.transition()
+              .duration(500)
+              .style("opacity", 0);
+        });
 
-			// Draw legend
-			var legend = svg.selectAll(".legend")
-							.data(color.domain())
-							.enter().append("g")
-								.attr("class", "legend")
-								.attr("transform", function(d, i) { return "translate(10," + (i+7) * 20 + ")"; });
+      // Draw legend
+      var legend = svg.selectAll(".legend")
+              .data(color.domain())
+              .enter().append("g")
+                .attr("class", "legend")
+                .attr("transform", function(d, i) { return "translate(10," + (i+7) * 20 + ")"; });
 
-			// Draw legend colored rectangles
-			legend.append("rect")
-					.attr("x", width - 18)
-					.attr("width", 18)
-					.attr("height", 18)
-					.style("fill", color);
+      // Draw legend colored rectangles
+      legend.append("rect")
+          .attr("x", width - 18)
+          .attr("width", 18)
+          .attr("height", 18)
+          .style("fill", color);
 
-			// Draw legend text
-			legend.append("text")
-					.attr("x", width - 24)
-					.attr("y", 9)
-					.attr("dy", ".35em")
-					.style("text-anchor", "end")
-					.text(function(d) { return d;})
-		});
-		
-	</script>
+      // Draw legend text
+      legend.append("text")
+          .attr("x", width - 24)
+          .attr("y", 9)
+          .attr("dy", ".35em")
+          .style("text-anchor", "end")
+          .text(function(d) { return d;})
+    });
+    
+  </script>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
