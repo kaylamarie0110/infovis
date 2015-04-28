@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.land {
+  fill: #ddd;
+}
+
+.counties {
+  fill: none;
+}
+
+.county-boundary {
+  fill: none;
+  stroke: #fff;
+  stroke-width: .5px;
+}
+
+.states {
+  fill: none;
+  stroke: #fff;
+  stroke-linejoin: round;
+}
+
+
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script>
+
+var width = 960,
+    height = 600;
+
+var inflowById = d3.map();
+var outflowById = d3.map();
+var netflowById = d3.map();
+
+var projection = d3.geo.albersUsa()
+    .scale(1280)
+    .translate([width / 2, height / 2]);
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+var color = d3.scale.log()
+    .range(["hsl(62,100%,90%)", "hsl(228,30%,20%)"])
+    .interpolate(d3.interpolateHcl);
+
+queue()
+    .defer(d3.json, "us.json")
+    .defer(d3.csv, "all_flow_complete.csv", function(d) { inflowById.set(d.id, +d.total_inflow); outflowById.set(d.id, +d.total_outflow); netflowById.set(d.id, +d.net_flow); })
+    .await(ready);
+
+function ready(error, us) {
+  var counties = topojson.feature(us, us.objects.counties).features;
+  
+  var densities = counties
+      .map(function(d) { return d.properties.density = inflowById.get(d.id) / path.area(d); })
+      .sort(function(a, b) { return a - b; });
+	  
+  color.domain([d3.quantile(densities, .01), d3.quantile(densities, .99)]);
+  
+  svg.append("path")
+	  .datum(topojson.feature(us, us.objects.land))
+	  .attr("class", "land")
+	  .attr("d", path);
+  
+  svg.append("g")
+      .attr("class", "counties")
+    .selectAll("path")
+      .data(counties)
+    .enter().append("path")
+      .style("fill", function(d) { return color(d.properties.density); })
+      .attr("d", path);
+  
+  svg.append("path")
+	  .datum(topojson.mesh(us, us.objects.counties, function(a, b) { return a !== b; }))
+	  .attr("class", "county-boundary")
+	  .attr("d", path);
+
+  svg.append("path")
+      .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+      .attr("class", "states")
+      .attr("d", path);
+}
+
+d3.select(self.frameElement).style("height", height + "px");
+
+</script>

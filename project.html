@@ -17,32 +17,57 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
 	
-	<style>
+<style>
 
-	.land {
-	  fill: #ddd;
-	}
+.land {
+  fill: #ddd;
+}
 
-	.county-boundary {
-	  fill: none;
-	  stroke: #fff;
-	  stroke-width: .5px;
-	}
+.border {
+  fill: none;
+  stroke: #fff;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
 
-	.state-boundary {
-	  fill: none;
-	  stroke: #fff;
-	}
+.bubble-inflow {
+  fill: green;
+  fill-opacity: .5;
+  stroke: #fff;
+  stroke-width: .5px;
+}
 
-	</style>
-	
-  </head>
-  <body>
-  
-	<script src="http://d3js.org/d3.v3.min.js"></script>
-	<script src="http://d3js.org/topojson.v1.min.js"></script>
-	
-    <nav class="navbar navbar-inverse">
+.bubble-outflow {
+  fill: red;
+  fill-opacity: .5;
+  stroke: #fff;
+  stroke-width: .5px;
+}
+
+.bubble-inflow :hover {
+  stroke: #000;
+}
+
+.bubble-outflow :hover {
+  stroke: #000;
+}
+
+
+.legend circle {
+  fill: none;
+  stroke: #ccc;
+}
+
+.legend text {
+  fill: #777;
+  font: 10px sans-serif;
+  text-anchor: middle;
+}
+
+
+</style>
+
+	<nav class="navbar navbar-inverse">
 		<div class="container-fluid">
 			<div class="navbar-header">
 				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-main" aria-expanded="false">
@@ -75,43 +100,307 @@
 		</div>
 	</nav>
 	
-	<div id="content" class="container">
+  </head>
+  <body>
+  
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+	<script src="http://d3js.org/queue.v1.min.js"></script>
+	<script src="http://d3js.org/topojson.v1.min.js"></script>
 	
-		<h1>Hampton Roads: In- & Out-Flow of DoD Contracting Dollars</h1>
+	<div class="row">
+		<div class='col-md-9' id="map">
 		
+		</div>
+		<div class='col-md-3'>
+			<div class="row">
+				<div class="col-md-5">
+					<div class="form-group">
+						<label for="flow_list">Flow Type: </label>
+						<select id="flow_list" class="form-control">
+							<option value="all">all</option>
+							<option value="inflow">inflow</option>
+							<option value="outflow">outflow</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-md-5">
+					<div class="form-group">
+						<label for="year_list">Year: </label>
+						<select id="year_list" class="form-control">
+							<option value="15">2015</option>
+							<option value="14">2014</option>
+							<option value="13">2013</option>
+							<option value="12">2012</option>
+							<option value="11">2011</option>
+							<option value="10">2010</option>
+							<option value="09">2009</option>
+							<option value="08">2008</option>
+							<option value="07">2007</option>
+							<option value="06">2006</option>
+						</select>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 	
-	<script>
+<script>
 
-		var width = 960,
-			height = 500;
+var year = d3.select('#year_list').property('value'),
+	flow = d3.select('#flow_list').property('value');
 
-		var projection = d3.geo.albersUsa()
-			.scale(1000)
-			.translate([width / 2, height / 2]);
+var width = 960,
+	height = 600;
 
-		var path = d3.geo.path()
-			.projection(projection);
+var countyById = d3.map(),
+	stateById = d3.map(),
+	inflowById = d3.map(),
+	outflowById = d3.map(),
+	netflowById = d3.map(),
+	inflow06ById = d3.map(),
+	outflow06ById = d3.map(),
+	inflow07ById = d3.map(),
+	outflow07ById = d3.map(),
+	inflow08ById = d3.map(),
+	outflow08ById = d3.map(),
+	inflow09ById = d3.map(),
+	outflow09ById = d3.map(),
+	inflow10ById = d3.map(),
+	outflow10ById = d3.map(),
+	inflow11ById = d3.map(),
+	outflow11ById = d3.map(),
+	inflow12ById = d3.map(),
+	outflow12ById = d3.map(),
+	inflow13ById = d3.map(),
+	outflow13ById = d3.map(),
+	inflow14ById = d3.map(),
+	outflow14ById = d3.map(),
+	inflow15ById = d3.map(),
+	outflow15ById = d3.map();
 
-		var svg = d3.select("#content").append("svg")
-			.attr("width", width)
-			.attr("height", height);
+var formatNumber = d3.format(",.2f");
 
-		d3.json("us.json", function(error, us) {
-		  svg.insert("path", ".graticule")
-			  .datum(topojson.feature(us, us.objects.land))
-			  .attr("class", "land")
-			  .attr("d", path);
 
-		  svg.insert("path", ".graticule")
-			  .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
-			  .attr("class", "state-boundary")
-			  .attr("d", path);
-		});
+var projection = d3.geo.albersUsa()
+    .scale(1280)
+    .translate([width / 2, height / 2]);
 
-		d3.select(self.frameElement).style("height", height + "px");
+var path = d3.geo.path()
+    .projection(projection);
 
-	</script>
+var svg = d3.select("#map").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+	
+var radius = d3.scale.sqrt()
+	.domain([0, 1e8])
+	.range([0, 20]);
+
+var legend = svg.append("g")
+    .attr("class", "legend")
+    .attr("transform", "translate(" + (width - 70) + "," + (height - 20) + ")")
+  .selectAll("g")
+    .data([1e7, 1e8, 3e8])
+  .enter().append("g");
+
+legend.append("circle")
+    .attr("cy", function(d) { return -radius(d); })
+    .attr("r", radius);
+
+legend.append("text")
+    .attr("y", function(d) { return -2 * radius(d); })
+    .attr("dy", "1.3em")
+    .text(d3.format(".1s"));
+	
+queue()
+    .defer(d3.json, "us.json")
+    .defer(d3.csv, "hr_flow_data.csv", function(d) {  countyById.set(d.id, d.county)
+													  stateById.set(d.id, d.state)
+													  inflowById.set(d.id, +d.total_inflow); 
+													  outflowById.set(d.id, +d.total_outflow); 
+													  inflow06ById.set(d.id, +d.inflow_2006); 
+													  outflow06ById.set(d.id, +d.outflow_2006);
+													  inflow07ById.set(d.id, +d.inflow_2007); 
+													  outflow07ById.set(d.id, +d.outflow_2007);
+													  inflow08ById.set(d.id, +d.inflow_2008); 
+													  outflow08ById.set(d.id, +d.outflow_2008);
+													  inflow09ById.set(d.id, +d.inflow_2009); 
+													  outflow09ById.set(d.id, +d.outflow_2009);
+													  inflow10ById.set(d.id, +d.inflow_2010); 
+													  outflow10ById.set(d.id, +d.outflow_2010);
+													  inflow11ById.set(d.id, +d.inflow_2011); 
+													  outflow11ById.set(d.id, +d.outflow_2011);
+													  inflow12ById.set(d.id, +d.inflow_2012); 
+													  outflow12ById.set(d.id, +d.outflow_2012);
+													  inflow13ById.set(d.id, +d.inflow_2013); 
+													  outflow13ById.set(d.id, +d.outflow_2013);
+													  inflow14ById.set(d.id, +d.inflow_2014); 
+													  outflow14ById.set(d.id, +d.outflow_2014);
+													  inflow15ById.set(d.id, +d.inflow_2015); 
+													  outflow15ById.set(d.id, +d.outflow_2015);})
+    .await(ready);
+
+function ready(error, us) {
+
+svg.append("path")
+    .datum(topojson.feature(us, us.objects.land))
+    .attr("class", "land")
+    .attr("d", path);
+
+svg.append("path")
+    .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+    .attr("class", "border border--state")
+    .attr("d", path);
+	
+chooseFlow(flow, us);
+
+  /* if (flow == "all")	{
+
+	svg.append(."g")
+		.attr("class", "bubble-inflow")
+	  .selectAll("circle")
+		.data(topojson.feature(us, us.objects.counties).features)
+		  .sort(function(a, b) { return inflow06ById.get(b.id) - inflow06ById.get(a.id); })
+	  .enter().append("circle")
+		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+		.attr("r", function(d) { return radius(inflow06ById.get(d.id)); })
+	  .append("title")
+		  .text(function(d) {
+			return countyById.get(d.id) + ", " + stateById.get(d.id)
+					+ "\nInflow $" + formatNumber(inflow06ById.get(d.id));
+		  });
+
+	svg.append("g")
+		.attr("class", "bubble-outflow")
+	  .selectAll("circle")
+		.data(topojson.feature(us, us.objects.counties).features)
+		  .sort(function(a, b) { return outflow06ById.get(b.id) - outflow06ById.get(a.id); })
+	  .enter().append("circle")
+		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+		.attr("r", function(d) { return radius(outflow06ById.get(d.id)); })
+	  .append("title")
+		  .text(function(d) {
+			return countyById.get(d.id) + ", " + stateById.get(d.id)
+					+ "\nOutflow $" + formatNumber(outflow06ById.get(d.id));
+		  });
+		  
+  } else if (flow == "inflow")	{
+  
+	svg.append("g")
+		.attr("class", "bubble-inflow")
+	  .selectAll("circle")
+		.data(topojson.feature(us, us.objects.counties).features)
+		  .sort(function(a, b) { return inflow06ById.get(b.id) - inflow06ById.get(a.id); })
+	  .enter().append("circle")
+		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+		.attr("r", function(d) { return radius(inflow06ById.get(d.id)); })
+	  .append("title")
+		  .text(function(d) {
+			return countyById.get(d.id) + ", " + stateById.get(d.id)
+					+ "\nInflow $" + formatNumber(inflow06ById.get(d.id));
+		  });
+		  
+  }	else	{
+  
+	svg.append("g")
+		.attr("class", "bubble-outflow")
+	  .selectAll("circle")
+		.data(topojson.feature(us, us.objects.counties).features)
+		  .sort(function(a, b) { return outflow06ById.get(b.id) - outflow06ById.get(a.id); })
+	  .enter().append("circle")
+		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+		.attr("r", function(d) { return radius(outflow06ById.get(d.id)); })
+	  .append("title")
+		  .text(function(d) {
+			return countyById.get(d.id) + ", " + stateById.get(d.id)
+					+ "\nOutflow $" + formatNumber(outflow06ById.get(d.id));
+		  });
+		  
+  } */
+ 
+  d3.select("#flow_list").on('change', onFlowChange);
+  //d3.select("#year_list").on('change', onYearChange);
+  
+  function onFlowChange() {
+	flow = d3.select('#flow_list').property('value');
+	chooseFlow(flow, us)
+  }
+ 
+}
+
+d3.select(self.frameElement).style("height", height + "px");
+
+</script>
+
+<script>
+function chooseFlow(flow_type, us)	{
+console.log(flow_type);
+  if (flow_type == "all")	{
+
+	svg.append("g")
+		.attr("class", "bubble-inflow")
+	  .selectAll("circle")
+		.data(topojson.feature(us, us.objects.counties).features)
+		  .sort(function(a, b) { return inflow06ById.get(b.id) - inflow06ById.get(a.id); })
+	  .enter().append("circle")
+		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+		.attr("r", function(d) { console.log(radius(inflow06ById.get(d.id))); return radius(inflow06ById.get(d.id)); })
+	  .append("title")
+		  .text(function(d) {
+			return countyById.get(d.id) + ", " + stateById.get(d.id)
+					+ "\nInflow $" + formatNumber(inflow06ById.get(d.id));
+		  });
+
+	svg.append("g")
+		.attr("class", "bubble-outflow")
+	  .selectAll("circle")
+		.data(topojson.feature(us, us.objects.counties).features)
+		  .sort(function(a, b) { return outflow06ById.get(b.id) - outflow06ById.get(a.id); })
+	  .enter().append("circle")
+		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+		.attr("r", function(d) { console.log(radius(outflow06ById.get(d.id))); return radius(outflow06ById.get(d.id)); })
+	  .append("title")
+		  .text(function(d) {
+			return countyById.get(d.id) + ", " + stateById.get(d.id)
+					+ "\nOutflow $" + formatNumber(outflow06ById.get(d.id));
+		  });
+		  
+  } else if (flow_type == "inflow")	{
+  
+	svg.append("g")
+		.attr("class", "bubble-inflow")
+	  .selectAll("circle")
+		.data(topojson.feature(us, us.objects.counties).features)
+		  .sort(function(a, b) { return inflow06ById.get(b.id) - inflow06ById.get(a.id); })
+	  .enter().append("circle")
+		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+		.attr("r", function(d) { return radius(inflow06ById.get(d.id)); })
+	  .append("title")
+		  .text(function(d) {
+			return countyById.get(d.id) + ", " + stateById.get(d.id)
+					+ "\nInflow $" + formatNumber(inflow06ById.get(d.id));
+		  });
+		  
+  }	else	{
+  
+	svg.append("g")
+		.attr("class", "bubble-outflow")
+	  .selectAll("circle")
+		.data(topojson.feature(us, us.objects.counties).features)
+		  .sort(function(a, b) { return outflow06ById.get(b.id) - outflow06ById.get(a.id); })
+	  .enter().append("circle")
+		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+		.attr("r", function(d) { return radius(outflow06ById.get(d.id)); })
+	  .append("title")
+		  .text(function(d) {
+			return countyById.get(d.id) + ", " + stateById.get(d.id)
+					+ "\nOutflow $" + formatNumber(outflow06ById.get(d.id));
+		  });
+		  
+  }
+}
+</script>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
