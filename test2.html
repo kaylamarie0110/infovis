@@ -2,134 +2,90 @@
 <meta charset="utf-8">
 <style>
 
-.land {
-  fill: #ddd;
-}
-
-.border {
-  fill: none;
-  stroke: #fff;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-.bubble-inflow {
-  fill: green;
-  fill-opacity: .5;
-  stroke: #fff;
-  stroke-width: .5px;
-}
-
-.bubble-outflow {
-  fill: red;
-  fill-opacity: .5;
-  stroke: #fff;
-  stroke-width: .5px;
-}
-
-.legend circle {
-  fill: none;
-  stroke: #ccc;
-}
-
-.legend text {
-  fill: #777;
+body {
   font: 10px sans-serif;
-  text-anchor: middle;
 }
 
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
 
+.x.axis path {
+  display: none;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
 
 </style>
 <body>
-<script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="http://d3js.org/queue.v1.min.js"></script>
-<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script src="http://d3js.org/d3.v3.js"></script>
 <script>
 
-var width = 960,
-    height = 600;
+var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
 
-var inflowById = d3.map();
-var outflowById = d3.map();
-var netflowById = d3.map();
-var inflow06ById = d3.map();
-var outflow06ById = d3.map();
+var parseDate = d3.time.format("%d-%b-%y").parse;
 
+var x = d3.time.scale()
+    .range([0, width]);
 
-var projection = d3.geo.albersUsa()
-    .scale(1280)
-    .translate([width / 2, height / 2]);
+var y = d3.scale.linear()
+    .range([height, 0]);
 
-var path = d3.geo.path()
-    .projection(projection);
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var line = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.close); });
 
 var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-	
-var radius = d3.scale.sqrt()
-	.domain([0, 1e8])
-	.range([0, 20]);
+d3.tsv("data.tsv", function(error, data) {
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.close = +d.close;
+  });
 
-var legend = svg.append("g")
-    .attr("class", "legend")
-    .attr("transform", "translate(" + (width - 50) + "," + (height - 20) + ")")
-  .selectAll("g")
-    .data([1e8, 5e8, 1e9])
-  .enter().append("g");
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+  y.domain(d3.extent(data, function(d) { return d.close; }));
 
-legend.append("circle")
-    .attr("cy", function(d) { return -radius(d); })
-    .attr("r", radius);
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
 
-legend.append("text")
-    .attr("y", function(d) { return -2 * radius(d); })
-    .attr("dy", "1.3em")
-    .text(d3.format(".1s"));
-	
-queue()
-    .defer(d3.json, "us.json")
-    .defer(d3.csv, "all_flow_complete.csv", function(d) { inflowById.set(d.id, +d.total_inflow); 
-														  outflowById.set(d.id, +d.total_outflow); 
-														  netflowById.set(d.id, +d.net_flow);
-														  inflow06ById.set(d.id, +d.inflow_2006); 
-														  outflow06ById.set(d.id, +d.outflow_2006);})
-    .await(ready);
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Price ($)");
 
-function ready(error, us) {
-
-svg.append("path")
-    .datum(topojson.feature(us, us.objects.land))
-    .attr("class", "land")
-    .attr("d", path);
-
-svg.append("path")
-    .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
-    .attr("class", "border border--state")
-    .attr("d", path);
-
-svg.append("g")
-    .attr("class", "bubble-inflow")
-  .selectAll("circle")
-    .data(topojson.feature(us, us.objects.counties).features)
-	  .sort(function(a, b) { return inflow06ById.get(b.id) - inflow06ById.get(a.id); })
-  .enter().append("circle")
-    .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
-    .attr("r", function(d) { return radius(inflow06ById.get(d.id)); });
-
-svg.append("g")
-    .attr("class", "bubble-outflow")
-  .selectAll("circle")
-    .data(topojson.feature(us, us.objects.counties).features)
-	  .sort(function(a, b) { return outflow06ById.get(b.id) - outflow06ById.get(a.id); })
-  .enter().append("circle")
-    .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
-    .attr("r", function(d) { return radius(outflow06ById.get(d.id)); });
-
-}
-
-d3.select(self.frameElement).style("height", height + "px");
+  svg.append("path")
+      .datum(data)
+      .attr("class", "line")
+      .attr("d", line);
+});
 
 </script>

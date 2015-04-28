@@ -64,37 +64,19 @@
   text-anchor: middle;
 }
 
-.axis path, .axis line {
+.axis path,
+.axis line {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
 }
-.axis text {
-	font-family: Lato;
-	font-size: 9px;
+
+.x.axis path {
+  display: none;
 }
 
-.line-inflow {
+.line {
   fill: none;
-  stroke: green;
-  stroke-width: 1.5px;
-}
-
-.dot-inflow {
-  fill: white;
-  stroke: green;
-  stroke-width: 1.5px;
-}
-
-.line-outflow {
-  fill: none;
-  stroke: red;
-  stroke-width: 1.5px;
-}
-
-.dot-outflow {
-  fill: white;
-  stroke: red;
   stroke-width: 1.5px;
 }
 
@@ -175,7 +157,6 @@
 					</div>
 				</div>
 			</div>
-			<br><br>
 			<div class="row" id="inflow_graph">
 				Inflow Chart
 			</div>
@@ -188,14 +169,115 @@
 	
 <script>
 
+var width_graph = 300,
+    height_graph = 200;
 
+var margin_graph = {top: 5, right:5, bottom:25, left:25};
 
+// draw and append the container
+var svg_inflow_graph = d3.select("#inflow_graph").append("svg")
+    .attr("height", height_graph)
+    .attr("width", width_graph)
+    .append("g")
+      .attr("transform","translate(" + margin_graph.left + "," + margin_graph.right + ")");
+
+// Setup x 
+var xScale = d3.scale.linear().range([0, width])domain([2006, 2015]), // value -> display
+	xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+var yScale = d3.scale.linear()
+      .range([height_graph - margin_graph.top - margin_graph.bottom,0]);
+
+var line = d3.svg.line().interpolate("monotone")
+  .x(function(d){ return xScale(d.x); })
+  .y(function(d){ return yScale(d.y); });
+
+// create random data
+function newData(lineNumber, points){
+  return d3.range(lineNumber).map(function(){
+    return d3.range(points).map(function(item,idx){
+      return {x:idx/(points-1),y:Math.random()*100};
+    });
+  });
+}
+
+function render(){
+  var data = newData(1,10);
+  
+  var yMin = data.reduce(function(pv,cv){
+    var currentMin = cv.reduce(function(pv,cv){
+      return Math.min(pv,cv.y);
+    },100)
+    return Math.min(pv,currentMin);
+  },100);
+  var yMax = data.reduce(function(pv,cv){
+    var currentMax = cv.reduce(function(pv,cv){
+      return Math.max(pv,cv.y);
+    },0)
+    return Math.max(pv,currentMax);
+  },0);
+
+  // set domain for axis
+  yScale.domain([yMin,yMax]);
+
+  // create axis scale
+  var yAxis = d3.svg.axis()
+		.scale(yScale).orient("left"),
+	  xAxis = d3.svg.axis()
+		.scale(xScale).orient("bottom");
+
+  // if no axis exists, create one, otherwise update it
+  if (svg_inflow_graph.selectAll(".y.axis")[0].length < 1 ){
+    svg_inflow_graph.append("g")
+        .attr("class","x axis")
+        .call(xAxis);
+	
+	svg_inflow_graph.append("g")
+        .attr("class","y axis")
+        .call(yAxis);
+  } else {
+    svg_inflow_graph.selectAll(".y.axis").transition().duration(1500).call(yAxis);
+  }
+  
+  
+
+  // generate line paths
+  var lines = svg_inflow_graph.selectAll(".line").data(data).attr("class","line");
+
+  // transition from previous paths to new paths
+  lines.transition().duration(1500)
+    .attr("d",line)
+    .style("stroke", function(){
+      return '#'+Math.floor(Math.random()*16777215).toString(16);
+    });
+    
+  // enter any new data
+  lines.enter()
+    .append("path")
+    .attr("class","line")
+    .attr("d",line)
+    .style("stroke", function(){
+      return '#'+Math.floor(Math.random()*16777215).toString(16);
+    });
+
+  // exit
+  lines.exit()
+    .remove();
+}
+
+// initial page render
+render();
 
 var year = d3.select('#year_list').property('value'),
 	flow = d3.select('#flow_list').property('value');
 
 var width = 960,
 	height = 600;
+
+var width_graph = 960,
+    height_graph = 500-37;
+
+var margin = {top: 20, right:20, bottom:20, left:50};
 
 var countyById = d3.map(),
 	stateById = d3.map(),
@@ -223,7 +305,6 @@ var countyById = d3.map(),
 	outflow15ById = d3.map();
 
 var formatNumber = d3.format(",.2f");
-var formatValue = d3.format(".2s");
 
 
 var projection = d3.geo.albersUsa()
@@ -288,125 +369,6 @@ queue()
 
 function ready(error, us) {
 
-
-function get_data_inflow(id)	{
-	return [
-	  [new Date(2006, 0, 1), inflow06ById.get(id)],
-	  [new Date(2007, 0, 1), inflow07ById.get(id)],
-	  [new Date(2008, 0, 1), inflow08ById.get(id)],
-	  [new Date(2009, 0, 1), inflow09ById.get(id)],
-	  [new Date(2010, 0, 1), inflow10ById.get(id)],
-	  [new Date(2011, 0, 1), inflow11ById.get(id)],
-	  [new Date(2012, 0, 1), inflow12ById.get(id)],
-	  [new Date(2013, 0, 1), inflow13ById.get(id)],
-	  [new Date(2014, 0, 1), inflow14ById.get(id)],
-	  [new Date(2015, 0, 1), inflow15ById.get(id)]
-	];
-}
-function get_data_outflow(id)	{
-	return [
-	  [new Date(2006, 0, 1), outflow06ById.get(id)],
-	  [new Date(2007, 0, 1), outflow07ById.get(id)],
-	  [new Date(2008, 0, 1), outflow08ById.get(id)],
-	  [new Date(2009, 0, 1), outflow09ById.get(id)],
-	  [new Date(2010, 0, 1), outflow10ById.get(id)],
-	  [new Date(2011, 0, 1), outflow11ById.get(id)],
-	  [new Date(2012, 0, 1), outflow12ById.get(id)],
-	  [new Date(2013, 0, 1), outflow13ById.get(id)],
-	  [new Date(2014, 0, 1), outflow14ById.get(id)],
-	  [new Date(2015, 0, 1), outflow15ById.get(id)]
-  ];
-}
-
-
-
-var svg_inflow = d3.select("#inflow_graph").append("svg");
-var svg_outflow = d3.select("#outflow_graph").append("svg");
-
-function create_graphs(id)	{
-	var margin = {top: 5, right: 15, bottom: 25, left: 35},
-		width_graph = 300 - margin.left - margin.right,
-		height_graph = 200 - margin.top - margin.bottom;
-
-	var x = d3.time.scale()
-		.domain([new Date(2006, 0, 1), new Date(2015, 0, 1)])
-		.range([0, width_graph]);
-
-	var y = d3.scale.linear()
-		.domain([0, 3e9])
-		.range([height_graph, 0]);
-
-	var xAxis = d3.svg.axis()
-		.scale(x)
-		.orient("bottom");
-
-	var yAxis = d3.svg.axis()
-		.scale(y)
-		.tickFormat(function(d) { return formatValue(d)})
-		.orient("left");
-
-	var line = d3.svg.line()
-		.interpolate("monotone")
-		.x(function(d) { return x(d[0]); })
-		.y(function(d) { return y(d[1]); });
-
-	svg_inflow.datum(get_data_inflow(id))
-		.attr("width", width_graph + margin.left + margin.right)
-		.attr("height", height_graph + margin.top + margin.bottom)
-	  .append("g")
-		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-	svg_inflow.append("g")
-		.attr("class", "x axis")
-		.attr("transform", "translate(0," + height_graph + ")")
-		.call(xAxis);
-
-	svg_inflow.append("g")
-		.attr("class", "y axis")
-		.call(yAxis);
-
-	svg_inflow.append("path")
-		.attr("class", "line-inflow")
-		.attr("d", line);
-
-	svg_inflow.selectAll(".dot")
-		.data(get_data_inflow(id))
-	  .enter().append("circle")
-		.attr("class", "dot-inflow")
-		.attr("cx", line.x())
-		.attr("cy", line.y())
-		.attr("r", 3.5);
-
-	svg_outflow.datum(get_data_outflow(id))
-		.attr("width", width_graph + margin.left + margin.right)
-		.attr("height", height_graph + margin.top + margin.bottom)
-	  .append("g")
-		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-	svg_outflow.append("g")
-		.attr("class", "x axis")
-		.attr("transform", "translate(0," + height_graph + ")")
-		.call(xAxis);
-
-	svg_outflow.append("g")
-		.attr("class", "y axis")
-		.call(yAxis);
-
-	svg_outflow.append("path")
-		.attr("class", "line-outflow")
-		.attr("d", line);
-
-	svg_outflow.selectAll(".dot")
-		.data(get_data_outflow(id))
-	  .enter().append("circle")
-		.attr("class", "dot-outflow")
-		.attr("cx", line.x())
-		.attr("cy", line.y())
-		.attr("r", 3.5);
-}
-
-create_graphs("1");
-
 svg.append("path")
     .datum(topojson.feature(us, us.objects.land))
     .attr("class", "land")
@@ -428,35 +390,14 @@ chooseFlow(flow, year, us);
 	svg.selectAll("g").remove();
 	chooseFlow(flow, year, us);
   }
-  
-  function hover (d)  {
-	console.log(d.id);
-	var inflow_data = get_data_inflow("1");
-	console.log(inflow_data);
-	svg_inflow.selectAll("g").remove();
-	svg_inflow.selectAll("path").remove();
-	svg_inflow.selectAll("circle").remove();
-	svg_outflow.selectAll("g").remove();
-	svg_outflow.selectAll("path").remove();
-	svg_outflow.selectAll("circle").remove();
-	create_graphs(d.id);
-
+ 
 }
 
-  function unhover (d)  {
-	console.log(d.id);
-	var inflow_data = get_data_inflow("1");
-	console.log(inflow_data);
-	svg_inflow.selectAll("g").remove();
-	svg_inflow.selectAll("path").remove();
-	svg_inflow.selectAll("circle").remove();
-	svg_outflow.selectAll("g").remove();
-	svg_outflow.selectAll("path").remove();
-	svg_outflow.selectAll("circle").remove();
-	create_graphs("1");
+d3.select(self.frameElement).style("height", height + "px");
 
-}
+</script>
 
+<script>
 function chooseFlow(flow_type, year, us)	{
 
 var inflowById = "inflow" + year + "ById",
@@ -490,8 +431,6 @@ legend.append("text")
 	  .enter().append("circle")
 		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
 		.attr("r", function(d) { /*console.log(radius(window[inflowById].get(d.id)));*/ return radius(window[inflowById].get(d.id)); })
-		.on("mouseover", hover)
-		.on("mouseout", unhover)
 	  .append("title")
 		  .text(function(d) {
 			return countyById.get(d.id) + ", " + stateById.get(d.id)
@@ -506,8 +445,6 @@ legend.append("text")
 	  .enter().append("circle")
 		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
 		.attr("r", function(d) { /*console.log(radius(window[outflowById].get(d.id)));*/ return radius(window[outflowById].get(d.id)); })
-		.on("mouseover", hover)
-		.on("mouseout", unhover)
 	  .append("title")
 		  .text(function(d) {
 			return countyById.get(d.id) + ", " + stateById.get(d.id)
@@ -524,8 +461,6 @@ legend.append("text")
 	  .enter().append("circle")
 		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
 		.attr("r", function(d) { return radius(window[inflowById].get(d.id)); })
-		.on("mouseover", hover)
-		.on("mouseout", unhover)
 	  .append("title")
 		  .text(function(d) {
 			return countyById.get(d.id) + ", " + stateById.get(d.id)
@@ -542,8 +477,6 @@ legend.append("text")
 	  .enter().append("circle")
 		.attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
 		.attr("r", function(d) { return radius(window[outflowById].get(d.id)); })
-		.on("mouseover", hover)
-		.on("mouseout", unhover)
 	  .append("title")
 		  .text(function(d) {
 			return countyById.get(d.id) + ", " + stateById.get(d.id)
@@ -552,13 +485,6 @@ legend.append("text")
 		  
   }
 }
-}
-
-d3.select(self.frameElement).style("height", height + "px");
-
-
-
-
 </script>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
